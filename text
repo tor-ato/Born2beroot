@@ -1,0 +1,147 @@
+1.Simple Configuration
+——————
+パスワード確認
+パスワード文字規則
+sudo nano /etc/pam.d/common-password
+(Pluggable Authentication Modules）
+password        requisite     pam_pwquality.so モジュール
+retry=3 最大3回
+minlen=10 十文字以上
+lcredit=-1 小文字一文字以上
+ucredit=-1 大文字一文字以上
+dcredit=-1 数字一文字以上
+maxrepeat=3 同じ文字が三回続いちゃいけない
+usercheck=1 ユーザー名を含むパスワードを禁止
+difok=7 新しいパスワードは少なくとも７文字異なる必要がある
+enforce_for_root rootにもこのルールを適用
+
+パスワード規則
+sudo nano /etc/login.defs
+PASS_MAX_DAYS (パスワード有効期限)
+PASS_MIN_DAYS (パスワード変更不可能期間)
+PASS_WARN_AGE (パスワードの有効期限切れの警告日数)
+
+パスワード規則適応確認
+sudo chage -l userid
+(パスワード設定適応sudo chage -m root (min)sudo chage -M root (max)sudo chage -W root (warning))
+——————
+
+——————
+ディストリビューション確認
+uname -v
+——————
+
+——————
+デーモン起動確認
+sudo systemctl status ssh
+sudo systemctl status cron
+sudo systemctl status ufw
+——————
+
+2.User
+——————
+ユーザー追加
+sudo adduser new_user
+グループ追加
+sudo groupadd evaluating
+グループにユーザーを追加
+sudo usermod -aG evaluating new_user
+
+グループ一覧確認
+sudo nano /etc/group
+
+グループのユーザー確認
+getent group  42group
+sudo cat /etc/group | grep "sudo"
+
+グループの削除sudo groupdel 42group
+——————
+
+
+3.Hostname and Partitions——————
+ホストネーム確認
+hostname (uname -n)(hostnamectl)
+
+ホストネーム変更
+sudo hostnamectl set-hostname test42
+
+変更後リブート
+sudo reboot
+——————
+
+——————
+パーテーション確認
+lsblk
+——————
+
+
+4.SUDO
+——————sudoインストール確認
+dpkg -l | grep "sudo"
+
+sudoのバージョン確認
+sudo -V （sudo —version）
+
+sudoグループへ追加
+rootグループへ追加
+
+sudoログの確認sudo nano /var/log/sudo/sudo.log
+
+sudo設定確認sudo nano /etc/sudoers(sudo visudo)Defaults        env_reset (環境変数のリセット)
+Defaults        mail_badpass (パスワードを間違えたときに管理者にメールで通知)
+Defaults        secure_path="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin" (これらに記載のあるパスが実行可能)
+Defaults        badpass_message="Password is wrong, please try again!" (パスワードを間違えた時のメッセージ)
+Defaults        passwd_tries=3 (3回間違えるとやり直し)
+Defaults        logfile="/var/log/sudo/sudo.log" (sudo のログファイル記載場所)
+Defaults        log_input (logfileに入力内容を記載)
+Defaults        log_output (logfileに出力内容を記載)
+Defaults        requiretty (ターミナルからのみsudoを実行可能)
+
+root    ALL=(ALL:ALL) ALL
+tkitahar ALL=(ALL:ALL) ALL
+%sudo   ALL=(ALL:ALL) ALL
+tkitahar ALL=(ALL) NOPASSWD: /usr/local/bin/monitoring.sh (パワードなしでモニタリングフィアルを実行可能)
+@includedir /etc/sudoers.d (/etc/sudoers.d 内のすべてのファイルをルールとして適応)
+〜権限の話〜
+who　　where　　　=　　(as_whom)　　　what
+[誰が　どのホストで　=　(誰に変身して)　何をするか]
+ALL ＝　ホストに対する許可(ALL: どのユーザーになれるか:ALL) どのグループになれるか) ALL どのコマンドを実行できるか
+——————5.UFW / Firewalld
+——————
+ufwインストール確認
+dpkg -l | grep "ufw"
+
+ufwにて許可されているポートの確認sudo ufw status numbered
+
+ufwのポート可能
+sudo ufw able 8080
+ufwのポート削除（非可能ではないことに注意）
+sudo ufw status numbered
+sudo ufw delete __number_of_ufw__
+——————
+
+6.SSH
+——————sshのインストール確認dpkg -l | grep "ssh"
+
+ssh のポート確認
+sudo nano /etc/ssh/sshd_config
+
+ssh接続コマンド
+ssh tkitahar@127.0.0.1 -p 4242
+
+——————
+
+7.Script Monitoring
+——————
+
+クーロン設定確認
+sudo crontab -l
+クーロン編集
+sudo crontab -u root -e
+
+クーロンの非許可（停止でないことを留意）
+sudo systemctl disable cron
+クーロンの許可（開始でないことを留意）
+sudo systemctl ensable cron
+
+——————
